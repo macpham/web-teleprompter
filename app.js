@@ -7,6 +7,7 @@ const FONT_MIN = 24, FONT_MAX = 96, FONT_STEP = 4;
 const WPM_MIN = 60, WPM_MAX = 300, WPM_STEP = 10;
 const LOOKBEHIND_TOKENS = 8;
 const NEAR_JUMP = 3, MID_JUMP = 12; // word distances that separate small / medium / big jumps
+const LINE_HOLD_MS = 350; // keep a just-finished line in focus so its last word shows as heard
 
 // User-tunable tracking settings, shown in the Settings dialog.
 const TUNING = [
@@ -161,10 +162,22 @@ function currentLine() {
   return words[tokens[pos].wi].line;
 }
 
-function paint(instant = false) {
-  const finished = tokens.length > 0 && pos >= tokens.length;
-  const li = currentLine();
-  const next = running && !finished ? words[tokens[pos].wi] : null;
+let holdTimer = 0;
+
+function cancelHold() { clearTimeout(holdTimer); holdTimer = 0; }
+
+// hold: the position advanced from speech/auto-scroll, so briefly keep the previous
+// line current (and un-grayed) before moving on.
+function paint(instant = false, hold = false) {
+  let finished = tokens.length > 0 && pos >= tokens.length;
+  let li = currentLine();
+  if (instant) cancelHold();
+  if ((hold || holdTimer) && !instant && shownLine >= 0 && (li > shownLine || finished)) {
+    if (!holdTimer) holdTimer = setTimeout(() => { holdTimer = 0; paint(); }, LINE_HOLD_MS);
+    li = shownLine;
+    finished = false;
+  }
+  const next = running && pos < tokens.length ? words[tokens[pos].wi] : null;
   for (const w of words) {
     let cls = finished || w.line < li ? 'w past' : w.heard ? 'w heard' : 'w';
     if (w === next) cls += ' next';
@@ -211,10 +224,12 @@ function stopAnimation() { cancelAnimationFrame(raf); raf = 0; }
 
 // ---------- position ----------
 
-function setPos(p) {
+// hold = position came from following the reader (not a tap or reset).
+function setPos(p, hold = false) {
+  if (!hold) cancelHold();
   pos = clamp(p, 0, tokens.length);
   save(KEY.pos, pos);
-  paint();
+  paint(false, hold);
 }
 
 function jumpToWord(wi) {
@@ -284,7 +299,7 @@ function handleSpeech(transcript) {
     const need = jump <= NEAR_JUMP ? tune.nearNeed : jump <= MID_JUMP ? tune.midNeed : tune.farNeed;
     if (fresh < need) continue;
     for (const t of matched) words[tokens[t].wi].heard = true;
-    setPos(target + 1);
+    setPos(target + 1, true);
     if (pos >= tokens.length) stop();
     return;
   }
@@ -371,7 +386,7 @@ function stop() {
 function autoStep() {
   if (pos >= tokens.length) { stop(); return; }
   words[tokens[pos].wi].heard = true;
-  setPos(pos + 1);
+  setPos(pos + 1, true);
 }
 
 function enableAutoMode() {

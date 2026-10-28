@@ -114,15 +114,13 @@ button.primary.stop { background: #fff; }
 #script p { margin: 0 0 0.6em; }
 #script .empty { color: #666; font-size: 20px; text-align: center; }
 
-/* inline-block so the next-word scale is a pure transform and never re-wraps lines. */
-.w {
-  display: inline-block;
-  max-width: 100%;
-  cursor: pointer;
-  transform-origin: 50% 60%;
-  transition: transform 0.1s; /* colour changes stay instant */
+.w { cursor: pointer; }
+/* The "cursor": underline the word we expect to hear next. */
+.w.next {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
 }
-.w.next { transform: scale(1.12); }
 /* Faux-bold via stroke so recognised words don't change width and re-wrap lines. */
 .w.heard { color: var(--heard); -webkit-text-stroke: 0.035em var(--heard); }
 .w.past { color: var(--past); -webkit-text-stroke: 0; }
