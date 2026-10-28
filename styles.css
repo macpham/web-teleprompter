@@ -64,7 +64,8 @@ button {
 button:active { background: var(--btn-active); }
 button.primary { background: var(--heard); color: #000; flex-grow: 1.4; }
 button.primary.stop { background: #fff; }
-.settings-btn { flex: 0 0 44px; font-size: 22px; }
+.settings-btn { flex: 0 0 44px; display: flex; align-items: center; justify-content: center; }
+.icon { width: 24px; height: 24px; fill: currentColor; }
 #wpm-label { flex: 1 1 0; text-align: center; color: #aaa; font-size: 15px; }
 
 /* ---------- edit view ---------- */
