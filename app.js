@@ -164,8 +164,10 @@ function currentLine() {
 function paint(instant = false) {
   const finished = tokens.length > 0 && pos >= tokens.length;
   const li = currentLine();
+  const next = running && !finished ? words[tokens[pos].wi] : null;
   for (const w of words) {
-    const cls = finished || w.line < li ? 'w past' : w.heard ? 'w heard' : 'w';
+    let cls = finished || w.line < li ? 'w past' : w.heard ? 'w heard' : 'w';
+    if (w === next) cls += ' next';
     if (w.cls !== cls) { w.el.className = cls; w.cls = cls; }
   }
   if (li !== shownLine || instant) {
@@ -388,6 +390,7 @@ function setWpm(v) {
 }
 
 function updateControls() {
+  paint(); // show / hide the next-word emphasis
   startBtn.textContent = running ? 'Stop' : 'Start';
   startBtn.classList.toggle('stop', running);
   speedBar.hidden = !autoMode;
