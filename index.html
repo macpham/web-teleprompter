@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Prompter">
+  <title>Teleprompter</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Edit view: paste / type the script -->
+  <section id="edit-view" class="view" hidden>
+    <textarea id="script-input" placeholder="Paste or type your script here…" spellcheck="false"></textarea>
+    <nav class="toolbar">
+      <button id="paste-btn" type="button">Paste</button>
+      <button id="clear-btn" type="button">Clear</button>
+      <button id="done-btn" type="button" class="primary">Prompt ▶</button>
+    </nav>
+  </section>
+
+  <!-- Prompt view: the teleprompter itself -->
+  <section id="prompt-view" class="view" hidden>
+    <div id="stage">
+      <div id="scroller">
+        <div id="script"></div>
+      </div>
+      <div id="focus-band" aria-hidden="true"></div>
+      <div id="status" aria-live="polite"></div>
+    </div>
+    <nav id="speed-bar" class="toolbar" hidden>
+      <button id="slower-btn" type="button">Slower</button>
+      <span id="wpm-label">140 wpm</span>
+      <button id="faster-btn" type="button">Faster</button>
+    </nav>
+    <nav class="toolbar">
+      <button id="edit-btn" type="button">Edit</button>
+      <button id="font-down-btn" type="button" aria-label="Decrease font size">A−</button>
+      <button id="font-up-btn" type="button" aria-label="Increase font size">A+</button>
+      <button id="reset-btn" type="button">Reset</button>
+      <button id="start-btn" type="button" class="primary">Start</button>
+    </nav>
+  </section>
+
+  <div id="toast" role="alert" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
