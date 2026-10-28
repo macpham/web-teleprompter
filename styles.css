@@ -36,7 +36,7 @@ html, body {
 
 .toolbar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   padding: 8px max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   background: var(--bg);
@@ -50,12 +50,12 @@ button {
   flex: 1 1 0;
   min-width: 0;
   min-height: 48px;
-  padding: 0 6px;
+  padding: 0 4px;
   border: 0;
   border-radius: 12px;
   background: var(--btn);
   color: var(--fg);
-  font: 600 17px var(--font);
+  font: 600 16px var(--font);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -64,6 +64,7 @@ button {
 button:active { background: var(--btn-active); }
 button.primary { background: var(--heard); color: #000; flex-grow: 1.4; }
 button.primary.stop { background: #fff; }
+.settings-btn { flex: 0 0 44px; font-size: 22px; }
 #wpm-label { flex: 1 1 0; text-align: center; color: #aaa; font-size: 15px; }
 
 /* ---------- edit view ---------- */
@@ -71,7 +72,8 @@ button.primary.stop { background: #fff; }
 #script-input {
   flex: 1;
   width: 100%;
-  padding: 16px max(16px, env(safe-area-inset-left));
+  /* Extra top room so the first line clears the browser's faded top edge. */
+  padding: 40px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
   border: 0;
   outline: none;
   resize: none;
@@ -154,6 +156,40 @@ button.primary.stop { background: #fff; }
   animation: pulse 1.2s infinite;
 }
 @keyframes pulse { 50% { opacity: 0.3; } }
+
+/* ---------- settings ---------- */
+
+#settings {
+  width: min(100% - 32px, 480px);
+  max-height: calc(100% - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 0 16px 16px;
+  border: 1px solid #333;
+  border-radius: 16px;
+  background: #111;
+  color: var(--fg);
+  font-family: var(--font);
+}
+#settings::backdrop { background: rgba(0, 0, 0, 0.7); }
+#settings header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0 12px;
+  background: #111;
+}
+#settings h2 { flex: 1; margin: 0; font-size: 20px; }
+#settings header button { flex: 0 0 auto; padding: 0 20px; }
+#settings-defaults { width: 100%; margin-top: 8px; }
+
+.setting { padding: 12px 0; border-top: 1px solid #262626; }
+.setting-head { display: flex; align-items: center; gap: 12px; }
+.setting-label { flex: 1; font-size: 17px; font-weight: 600; }
+.setting-help { margin: 6px 0 0; color: #999; font-size: 14px; line-height: 1.4; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper button { flex: 0 0 44px; min-height: 40px; font-size: 20px; }
+.stepper output { min-width: 3.5em; text-align: center; font-variant-numeric: tabular-nums; }
 
 #toast {
   position: fixed;

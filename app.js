@@ -2,12 +2,33 @@
 
 // ---------- constants & persisted settings ----------
 
-const KEY = { text: 'tp.text', fs: 'tp.fs', pos: 'tp.pos', wpm: 'tp.wpm' };
+const KEY = { text: 'tp.text', fs: 'tp.fs', pos: 'tp.pos', wpm: 'tp.wpm', tune: 'tp.tune' };
 const FONT_MIN = 24, FONT_MAX = 96, FONT_STEP = 4;
 const WPM_MIN = 60, WPM_MAX = 300, WPM_STEP = 10;
-const TAIL_WORDS = 8;      // how many recent spoken words we align against the script
-const LOOKAHEAD_LINES = 3; // how far ahead of the current line we search
 const LOOKBEHIND_TOKENS = 8;
+const NEAR_JUMP = 3, MID_JUMP = 12; // word distances that separate small / medium / big jumps
+
+// User-tunable tracking settings, shown in the Settings dialog.
+const TUNING = [
+  { key: 'lookahead', label: 'Look-ahead', def: 3, min: 1, max: 10, step: 1,
+    fmt: (v) => v + (v === 1 ? ' line' : ' lines'),
+    help: 'How many lines past the current one to search for what you said. More lets it catch up after skipping; fewer avoids false jumps.' },
+  { key: 'nearNeed', label: 'Words to advance', def: 1, min: 1, max: 4, step: 1,
+    fmt: (v) => v + (v === 1 ? ' word' : ' words'),
+    help: `Matching words needed to move up to ${NEAR_JUMP} words ahead.` },
+  { key: 'midNeed', label: 'Words for a short jump', def: 2, min: 1, max: 6, step: 1,
+    fmt: (v) => v + (v === 1 ? ' word' : ' words'),
+    help: `Matching words needed to move ${NEAR_JUMP + 1}–${MID_JUMP} words ahead (e.g. after skipping a phrase).` },
+  { key: 'farNeed', label: 'Words for a long jump', def: 3, min: 1, max: 8, step: 1,
+    fmt: (v) => v + (v === 1 ? ' word' : ' words'),
+    help: `Matching words needed to move more than ${MID_JUMP} words ahead (e.g. after skipping a sentence).` },
+  { key: 'similar', label: 'Word match strictness', def: 0.75, min: 0.5, max: 1, step: 0.05,
+    fmt: (v) => Math.round(v * 100) + '%',
+    help: 'How similar a heard word must be to a script word to count. Lower is more forgiving of mishearing; 100% needs exact matches.' },
+  { key: 'tail', label: 'Recent words compared', def: 8, min: 3, max: 16, step: 1,
+    fmt: (v) => v + ' words',
+    help: 'How many of your most recent spoken words are compared with the script. More is steadier; fewer reacts faster to jumps.' },
+];
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -33,6 +54,7 @@ let text = load(KEY.text, '');
 let fontSize = clamp(+load(KEY.fs, 40) || 40, FONT_MIN, FONT_MAX);
 let wpm = clamp(+load(KEY.wpm, 140) || 140, WPM_MIN, WPM_MAX);
 let pos = +load(KEY.pos, 0) || 0; // index of the next expected token
+let tune = loadTuning();
 
 let words = [];        // { el, line, heard, cls }
 let tokens = [];       // { norm, wi } — normalised matchable units (a word can yield 0..n tokens)
@@ -211,12 +233,12 @@ function reset() {
 // of the script around the current position. Tolerates misheard, skipped and
 // ad-libbed words; only ever moves the position forward.
 function handleSpeech(transcript) {
-  const spoken = tokenize(transcript).slice(-TAIL_WORDS);
+  const spoken = tokenize(transcript).slice(-tune.tail);
   const key = spoken.join(' ');
   if (!spoken.length || key === lastKey || pos >= tokens.length) return;
   lastKey = key;
 
-  const endLine = Math.min(lines.length - 1, currentLine() + LOOKAHEAD_LINES);
+  const endLine = Math.min(lines.length - 1, currentLine() + tune.lookahead);
   const endWord = lines[endLine].last;
   const a = Math.max(0, pos - LOOKBEHIND_TOKENS);
   const afterEnd = endWord + 1 < words.length ? wordFirstTok[endWord + 1] : tokens.length;
@@ -229,7 +251,7 @@ function handleSpeech(transcript) {
   for (let i = 1; i <= m; i++) {
     for (let k = 1; k <= L; k++) {
       const s = similarity(spoken[i - 1], tokens[a + k - 1].norm);
-      const matched = s >= 0.75;
+      const matched = s >= tune.similar;
       const d = H[(i - 1) * W + k - 1] + (s >= 1 ? 2 : matched ? 1.5 : -1);
       const u = H[(i - 1) * W + k] - 1;
       const l = H[i * W + k - 1] - 1;
@@ -257,7 +279,7 @@ function handleSpeech(transcript) {
     }
     const fresh = matched.filter((t) => t >= pos).length;
     const jump = target - pos;
-    const need = jump <= 3 ? 1 : jump <= 12 ? 2 : 3;
+    const need = jump <= NEAR_JUMP ? tune.nearNeed : jump <= MID_JUMP ? tune.midNeed : tune.farNeed;
     if (fresh < need) continue;
     for (const t of matched) words[tokens[t].wi].heard = true;
     setPos(target + 1);
@@ -278,7 +300,7 @@ function startRecognition() {
   rec.onresult = (e) => {
     // Only the tail matters; walk back from the latest result until we have enough words.
     let t = '';
-    for (let i = e.results.length - 1; i >= 0 && t.split(/\s+/).length <= TAIL_WORDS + 4; i--) {
+    for (let i = e.results.length - 1; i >= 0 && t.split(/\s+/).length <= tune.tail + 4; i--) {
       t = e.results[i][0].transcript + ' ' + t;
     }
     handleSpeech(t);
@@ -385,6 +407,58 @@ function setFontSize(v) {
   if (!promptView.hidden) layout();
 }
 
+// ---------- tuning settings ----------
+
+function loadTuning() {
+  let saved = {};
+  try { saved = JSON.parse(load(KEY.tune, '{}')) || {}; } catch { /* corrupt; use defaults */ }
+  const t = {};
+  for (const s of TUNING) t[s.key] = typeof saved[s.key] === 'number' ? clamp(saved[s.key], s.min, s.max) : s.def;
+  return t;
+}
+
+function setTuning(key, value) {
+  const s = TUNING.find((x) => x.key === key);
+  // Round to the step to avoid float drift (0.75 + 0.05 + …).
+  tune[key] = clamp(Math.round(value / s.step) * s.step, s.min, s.max);
+  save(KEY.tune, JSON.stringify(tune));
+  lastKey = '';
+  renderSettings();
+}
+
+function renderSettings() {
+  const rows = $('settings-rows');
+  if (!rows.children.length) {
+    for (const s of TUNING) {
+      const row = document.createElement('div');
+      row.className = 'setting';
+      row.innerHTML = `
+        <div class="setting-head">
+          <span class="setting-label"></span>
+          <div class="stepper">
+            <button type="button" data-d="-1" aria-label="Decrease">−</button>
+            <output></output>
+            <button type="button" data-d="1" aria-label="Increase">+</button>
+          </div>
+        </div>
+        <p class="setting-help"></p>`;
+      row.querySelector('.setting-label').textContent = s.label;
+      row.querySelector('.setting-help').textContent = s.help;
+      row.querySelectorAll('button').forEach((b) => {
+        b.addEventListener('click', () => setTuning(s.key, tune[s.key] + +b.dataset.d * s.step));
+      });
+      rows.append(row);
+    }
+  }
+  TUNING.forEach((s, i) => {
+    const row = rows.children[i];
+    row.querySelector('output').textContent = s.fmt(tune[s.key]);
+    const [down, up] = row.querySelectorAll('button');
+    down.disabled = tune[s.key] <= s.min;
+    up.disabled = tune[s.key] >= s.max;
+  });
+}
+
 // ---------- wake lock ----------
 
 async function requestWakeLock() {
@@ -439,6 +513,19 @@ $('faster-btn').addEventListener('click', () => setWpm(wpm + WPM_STEP));
 $('edit-btn').addEventListener('click', showEdit);
 $('done-btn').addEventListener('click', showPrompt);
 toastEl.addEventListener('click', () => { toastEl.hidden = true; });
+
+const settingsDialog = $('settings');
+document.querySelectorAll('.settings-btn').forEach((b) => b.addEventListener('click', () => {
+  renderSettings();
+  settingsDialog.showModal();
+}));
+$('settings-done').addEventListener('click', () => settingsDialog.close());
+$('settings-defaults').addEventListener('click', () => {
+  for (const s of TUNING) tune[s.key] = s.def;
+  setTuning(TUNING[0].key, TUNING[0].def);
+});
+// Tap outside the panel to close.
+settingsDialog.addEventListener('click', (e) => { if (e.target === settingsDialog) settingsDialog.close(); });
 
 input.addEventListener('input', () => {
   text = input.value;

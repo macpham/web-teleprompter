@@ -1,5 +1,5 @@
 // Bump VERSION whenever app files change so installed copies pick up the update.
-const VERSION = 'tp-v1';
+const VERSION = 'tp-v2';
 const FILES = [
   './',
   'index.html',

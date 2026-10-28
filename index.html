@@ -21,6 +21,7 @@
     <nav class="toolbar">
       <button id="paste-btn" type="button">Paste</button>
       <button id="clear-btn" type="button">Clear</button>
+      <button type="button" class="settings-btn" aria-label="Settings">⚙︎</button>
       <button id="done-btn" type="button" class="primary">Prompt ▶</button>
     </nav>
   </section>
@@ -44,9 +45,19 @@
       <button id="font-down-btn" type="button" aria-label="Decrease font size">A−</button>
       <button id="font-up-btn" type="button" aria-label="Increase font size">A+</button>
       <button id="reset-btn" type="button">Reset</button>
+      <button type="button" class="settings-btn" aria-label="Settings">⚙︎</button>
       <button id="start-btn" type="button" class="primary">Start</button>
     </nav>
   </section>
+
+  <dialog id="settings">
+    <header>
+      <h2>Tracking settings</h2>
+      <button id="settings-done" type="button" class="primary">Done</button>
+    </header>
+    <div id="settings-rows"></div>
+    <button id="settings-defaults" type="button">Restore defaults</button>
+  </dialog>
 
   <div id="toast" role="alert" hidden></div>
 
