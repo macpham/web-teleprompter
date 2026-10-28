@@ -1,9 +1,10 @@
-// Bump VERSION whenever app files change so installed copies pick up the update.
-const VERSION = 'tp-v4';
+// The page registers this as sw.js?v=<APP_VERSION>, so bumping version.js installs a fresh worker and cache.
+const VERSION = 'tp-v' + (new URL(self.location).searchParams.get('v') || '0');
 const FILES = [
   './',
   'index.html',
   'styles.css',
+  'version.js',
   'app.js',
   'manifest.webmanifest',
   'icons/icon-192.png',

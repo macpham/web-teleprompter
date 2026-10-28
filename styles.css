@@ -191,6 +191,7 @@ button.primary.stop { background: #fff; }
 #settings h2 { flex: 1; margin: 0; font-size: 20px; }
 #settings header button { flex: 0 0 auto; padding: 0 20px; }
 #settings-defaults { width: 100%; margin-top: 8px; }
+#app-version { margin: 12px 0 0; text-align: center; color: #555; font-size: 12px; }
 
 .setting { padding: 12px 0; border-top: 1px solid #262626; }
 .setting-head { display: flex; align-items: center; gap: 12px; }

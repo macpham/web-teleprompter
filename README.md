@@ -24,4 +24,4 @@ If speech recognition isn't available (or is blocked), the app switches to timed
 
 Plain HTML/CSS/JS with no build step. Serve the folder with any static server, e.g. `python3 -m http.server`, and open `http://localhost:8000`. Microphone access requires `localhost` or HTTPS.
 
-When you change app files, bump `VERSION` in `sw.js` so installed copies update.
+When you change app files, bump `APP_VERSION` in `version.js`. It's shown at the bottom of Settings, and changing it makes installed copies update.

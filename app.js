@@ -580,6 +580,7 @@ document.addEventListener('visibilitychange', () => {
 // ---------- boot ----------
 
 document.documentElement.style.setProperty('--fs', fontSize + 'px');
+$('app-version').textContent = 'Version ' + self.APP_VERSION;
 if (text.trim()) {
   showPrompt();
 } else {
@@ -588,5 +589,5 @@ if (text.trim()) {
 if (!SR) toast('Speech recognition isn’t available in this browser, so auto-scroll is on. Try Safari for voice tracking.');
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js?v=' + self.APP_VERSION).catch(() => {});
 }
