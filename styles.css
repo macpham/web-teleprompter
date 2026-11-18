@@ -213,3 +213,37 @@ button.primary.stop { background: #fff; }
   text-align: center;
   z-index: 10;
 }
+
+/* ---------- tablet ---------- */
+/* app.js puts `tablet` on <html> when the viewport is tablet-sized (and picks a larger
+   default --fs). Everything here keeps the phone layout from simply stretching. */
+
+/* Buttons keep a comfortable size in the middle instead of spanning the screen. */
+.tablet .toolbar { justify-content: center; gap: 10px; padding-top: 10px; }
+.tablet .toolbar button { flex: 0 1 132px; min-height: 52px; font-size: 17px; }
+.tablet .toolbar button.primary { flex-basis: 200px; }
+.tablet .toolbar .settings-btn { flex: 0 0 56px; }
+.tablet #speed-bar { padding-bottom: 0; }
+.tablet #wpm-label { flex: 0 0 120px; font-size: 17px; }
+
+/* Wider margins so lines don't run to the glass edge. */
+.tablet #script {
+  padding-left: max(48px, env(safe-area-inset-left));
+  padding-right: max(48px, env(safe-area-inset-right));
+}
+.tablet #status { top: 12px; padding: 6px 16px; font-size: 15px; }
+
+/* Editing: larger type in a centred column of readable width. */
+.tablet #script-input {
+  padding: 48px max(48px, env(safe-area-inset-left), env(safe-area-inset-right), 50% - 21em) 24px;
+  font-size: 22px;
+}
+
+.tablet #settings { width: min(100% - 64px, 560px); }
+.tablet #toast {
+  left: 50%;
+  right: auto;
+  width: min(100% - 64px, 560px);
+  transform: translateX(-50%);
+  font-size: 17px;
+}
