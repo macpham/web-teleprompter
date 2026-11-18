@@ -3,7 +3,9 @@
 // ---------- constants & persisted settings ----------
 
 const KEY = { text: 'tp.text', fs: 'tp.fs', pos: 'tp.pos', wpm: 'tp.wpm', tune: 'tp.tune' };
-const FONT_MIN = 24, FONT_MAX = 96, FONT_STEP = 4;
+const FONT_MIN = 24, FONT_STEP = 4;
+// Default and largest text size per layout: a tablet is read from further away than a phone.
+const FONT = { phone: { def: 40, max: 96 }, tablet: { def: 56, max: 144 } };
 const WPM_MIN = 60, WPM_MAX = 300, WPM_STEP = 10;
 const LOOKBEHIND_TOKENS = 8;
 const NEAR_JUMP = 3, MID_JUMP = 12; // word distances that separate small / medium / big jumps
@@ -41,6 +43,16 @@ function save(key, value) {
 }
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
+// ---------- tablet vs phone ----------
+
+// Decided by the room the app has, not the user agent: iPadOS Safari reports itself as a
+// Mac, and an iPad showing the app in a narrow Split View column is better off with the
+// phone layout. No phone is this large in both directions, in either orientation.
+// styles.css keys the tablet layout off the `tablet` class on <html>.
+const tabletMQ = window.matchMedia('(min-width: 700px) and (min-height: 600px)');
+let isTablet = tabletMQ.matches;
+document.documentElement.classList.toggle('tablet', isTablet);
+
 // ---------- DOM ----------
 
 const $ = (id) => document.getElementById(id);
@@ -52,7 +64,8 @@ const speedBar = $('speed-bar'), wpmLabel = $('wpm-label');
 // ---------- state ----------
 
 let text = load(KEY.text, '');
-let fontSize = clamp(+load(KEY.fs, 40) || 40, FONT_MIN, FONT_MAX);
+let chosenFontSize = +load(KEY.fs, 0) || 0; // 0 = never changed; use the layout's default
+let fontSize = FONT.phone.def;              // size in use, set by applyFontSize()
 let wpm = clamp(+load(KEY.wpm, 140) || 140, WPM_MIN, WPM_MAX);
 let pos = +load(KEY.pos, 0) || 0; // index of the next expected token
 let tune = loadTuning();
@@ -329,7 +342,7 @@ function startRecognition() {
       enableAutoMode();
       toast(e.error === 'not-allowed'
         ? 'Microphone access was denied. Allow it in your browser settings, or use auto-scroll.'
-        : 'Speech recognition is unavailable. On iPhone, turn on Siri & Dictation in Settings, or try Safari. Auto-scroll is enabled.');
+        : 'Speech recognition is unavailable. On iPhone or iPad, turn on Siri & Dictation in Settings, or try Safari. Auto-scroll is enabled.');
     } else if (e.error === 'audio-capture') {
       stop();
       toast('No microphone found.');
@@ -418,12 +431,30 @@ function updateControls() {
 
 // ---------- font size ----------
 
-function setFontSize(v) {
-  fontSize = clamp(v, FONT_MIN, FONT_MAX);
-  save(KEY.fs, fontSize);
+function fontRange() { return isTablet ? FONT.tablet : FONT.phone; }
+
+// Use the reader's chosen size, or the layout's default if they never picked one,
+// kept within what the current layout allows.
+function applyFontSize() {
+  const range = fontRange();
+  fontSize = clamp(chosenFontSize || range.def, FONT_MIN, range.max);
   document.documentElement.style.setProperty('--fs', fontSize + 'px');
   if (!promptView.hidden) layout();
 }
+
+function setFontSize(v) {
+  chosenFontSize = clamp(v, FONT_MIN, fontRange().max);
+  save(KEY.fs, chosenFontSize);
+  applyFontSize();
+}
+
+// Rotating an iPad keeps it a tablet; this fires when Split View or a window resize
+// crosses between the two layouts.
+tabletMQ.addEventListener('change', () => {
+  isTablet = tabletMQ.matches;
+  document.documentElement.classList.toggle('tablet', isTablet);
+  applyFontSize();
+});
 
 // ---------- tuning settings ----------
 
@@ -594,7 +625,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- boot ----------
 
-document.documentElement.style.setProperty('--fs', fontSize + 'px');
+applyFontSize();
 $('app-version').textContent = 'Version ' + self.APP_VERSION;
 if (text.trim()) {
   showPrompt();

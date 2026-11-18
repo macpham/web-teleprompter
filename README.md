@@ -14,7 +14,11 @@ Live: https://macpham.github.io/web-teleprompter/
 
 If speech recognition isn't available (or is blocked), the app switches to timed auto-scroll with Slower/Faster controls.
 
-## iPhone notes
+## Phone and tablet layouts
+
+The app works in portrait and landscape. When it has tablet-sized room (at least 700 × 600 CSS px, e.g. an iPad full screen in either orientation), it switches to a tablet layout: larger default text (56 px instead of 40, adjustable up to 144), wider margins, compact centred buttons and a centred editing column. An iPad showing the app in a narrow Split View column gets the phone layout.
+
+## iPhone and iPad notes
 
 - Uses the browser's Web Speech API (`webkitSpeechRecognition`). Safari supports it; Chrome on iOS may not.
 - Speech recognition on iOS requires **Settings › General › Keyboard › Enable Dictation** (and Siri may need to be on).
