@@ -17,7 +17,7 @@ If speech recognition isn't available (or is blocked), the app switches to timed
 
 ## Phone and tablet layouts
 
-The app works in portrait and landscape. When it has tablet-sized room (at least 700 × 600 CSS px, e.g. an iPad full screen in either orientation), it switches to a tablet layout: larger default text (56 px instead of 40, adjustable up to 144), wider margins, compact centred buttons and a centred editing column. An iPad showing the app in a narrow Split View column gets the phone layout.
+The app works in portrait and landscape. When it has tablet-sized room (at least 700 × 600 CSS px, e.g. an iPad full screen in either orientation), it switches to a tablet layout: larger default text (56 px instead of 40, adjustable up to 144), wider margins, compact centred buttons and a centred editing column. In landscape the script is shown in a centred column about 60% of the screen wide. An iPad showing the app in a narrow Split View column gets the phone layout.
 
 ## iPhone and iPad notes
 
