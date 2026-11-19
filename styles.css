@@ -253,6 +253,11 @@ button.primary.stop { background: #fff; }
   padding-left: max(48px, env(safe-area-inset-left));
   padding-right: max(48px, env(safe-area-inset-right));
 }
+/* In landscape the script sits in a centred column about 60% of the screen wide, so the
+   reader's eyes travel less from one end of a line to the other. */
+@media (orientation: landscape) {
+  .tablet #script { max-width: min(34em, 60%); padding-left: 0; padding-right: 0; }
+}
 .tablet #status { top: 12px; padding: 6px 16px; font-size: 15px; }
 
 /* Editing: larger type in a centred column of readable width. */
