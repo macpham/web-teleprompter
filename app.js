@@ -70,7 +70,7 @@ let fontSize = FONT.phone.def;              // size in use, set by applyFontSize
 let wpm = clamp(+load(KEY.wpm, 140) || 140, WPM_MIN, WPM_MAX);
 let pos = +load(KEY.pos, 0) || 0; // index of the next expected token
 let tune = loadTuning();
-let mirrored = load(KEY.mirror, '') === '1';
+let mirror = null; // one of MIRROR_MODES, set at boot by loadMirror()
 
 let words = [];        // { el, line, heard, cls }
 let tokens = [];       // { norm, wi } — normalised matchable units (a word can yield 0..n tokens)
@@ -461,17 +461,39 @@ tabletMQ.addEventListener('change', () => {
 // ---------- mirror ----------
 
 // For beam-splitter teleprompters, where the reader sees the screen reflected in angled
-// glass: flip the whole prompt screen left-to-right so the reflection reads normally.
+// glass: flip the whole prompt screen so the reflection reads normally. A single mirror
+// needs exactly one flip, and which one depends on which way round the device sits under
+// the glass, so the button steps through the choices. ("Both" is the same as turning the
+// device around: handy for a screen mounted upside down, but in glass it reads reversed.)
 // The edit screen is left alone; the system keyboard and text selection can't be flipped.
-function applyMirror() {
-  document.documentElement.classList.toggle('mirror', mirrored && !promptView.hidden);
-  mirrorBtn.setAttribute('aria-pressed', mirrored);
+const MIRROR_MODES = [
+  { id: 'off', label: 'Mirror off', flip: 'none' },
+  { id: 'h', label: 'Mirror: left–right', flip: 'scaleX(-1)' },
+  { id: 'v', label: 'Mirror: top–bottom', flip: 'scaleY(-1)' },
+  { id: 'hv', label: 'Mirror: both', flip: 'scale(-1)' },
+];
+
+function loadMirror() {
+  const saved = load(KEY.mirror, 'off');
+  const id = saved === '1' ? 'h' : saved; // '1' / '0' were saved when this was an on/off switch
+  return MIRROR_MODES.find((m) => m.id === id) || MIRROR_MODES[0];
 }
 
-function setMirror(on) {
-  mirrored = on;
-  save(KEY.mirror, on ? '1' : '0');
+function applyMirror() {
+  const root = document.documentElement;
+  const on = mirror.id !== 'off';
+  root.classList.toggle('mirror', on && !promptView.hidden);
+  root.style.setProperty('--flip', mirror.flip);
+  mirrorBtn.setAttribute('aria-pressed', on);
+  mirrorBtn.setAttribute('aria-label', mirror.label);
+  mirrorBtn.dataset.mode = mirror.id;
+}
+
+function nextMirror() {
+  mirror = MIRROR_MODES[(MIRROR_MODES.indexOf(mirror) + 1) % MIRROR_MODES.length];
+  save(KEY.mirror, mirror.id);
   applyMirror();
+  toast(mirror.label, 2000);
 }
 
 // ---------- tuning settings ----------
@@ -564,11 +586,11 @@ function showPrompt() {
 }
 
 let toastTimer = 0;
-function toast(msg) {
+function toast(msg, ms = 6000) {
   toastEl.textContent = msg;
   toastEl.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, ms);
 }
 
 // ---------- events ----------
@@ -579,7 +601,7 @@ $('font-up-btn').addEventListener('click', () => setFontSize(fontSize + FONT_STE
 $('font-down-btn').addEventListener('click', () => setFontSize(fontSize - FONT_STEP));
 $('slower-btn').addEventListener('click', () => setWpm(wpm - WPM_STEP));
 $('faster-btn').addEventListener('click', () => setWpm(wpm + WPM_STEP));
-mirrorBtn.addEventListener('click', () => setMirror(!mirrored));
+mirrorBtn.addEventListener('click', nextMirror);
 $('edit-btn').addEventListener('click', showEdit);
 $('done-btn').addEventListener('click', showPrompt);
 toastEl.addEventListener('click', () => { toastEl.hidden = true; });
@@ -647,6 +669,7 @@ document.addEventListener('visibilitychange', () => {
 // ---------- boot ----------
 
 applyFontSize();
+mirror = loadMirror();
 $('app-version').textContent = 'Version ' + self.APP_VERSION;
 if (text.trim()) {
   showPrompt();

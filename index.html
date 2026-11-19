@@ -12,7 +12,14 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    // The app's version: bump it on every release. It is shown in Settings, names the
+    // offline cache (see sw.js), and goes into the stylesheet and script URLs below so a
+    // refresh after a release can never be answered with a cached copy of the old files.
+    // (Browsers re-check this page itself on refresh, but not the files it links to.)
+    self.APP_VERSION = '9';
+    document.write('<link rel="stylesheet" href="styles.css?v=' + self.APP_VERSION + '">');
+  </script>
 </head>
 <body>
   <!-- Material Icons "settings" and "flip" (Apache 2.0) -->
@@ -69,7 +76,6 @@
 
   <div id="toast" role="alert" hidden></div>
 
-  <script src="version.js"></script>
-  <script src="app.js"></script>
+  <script>document.write('<script src="app.js?v=' + self.APP_VERSION + '"><\/script>');</script>
 </body>
 </html>

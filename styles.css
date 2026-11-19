@@ -71,6 +71,8 @@ button.primary.stop { background: #fff; }
 #mirror-btn { background: var(--blue); color: #000; }
 #mirror-btn:active { background: #7cc0ff; }
 #mirror-btn[aria-pressed="true"] { background: #fff; color: #0b6fd6; }
+/* Turn the icon on its side for the top-to-bottom flip. */
+#mirror-btn[data-mode="v"] .icon { transform: rotate(90deg); }
 .icon { width: 24px; height: 24px; fill: currentColor; }
 #wpm-label { flex: 1 1 0; text-align: center; color: #aaa; font-size: 15px; }
 
@@ -269,12 +271,13 @@ button.primary.stop { background: #fff; }
 }
 
 /* ---------- mirror ---------- */
-/* app.js puts `mirror` on <html> while the prompt screen is showing with mirroring on.
-   The whole screen is flipped left-to-right so it reads correctly when reflected in a
-   teleprompter's glass. The dialog and toast aren't inside #prompt-view (the dialog is in
-   the top layer, which ignores ancestor transforms), so they are flipped separately.
+/* app.js puts `mirror` on <html> while the prompt screen is showing with a mirror mode on,
+   and sets --flip to that mode's transform (left-right, top-bottom or both). The whole
+   screen is flipped so it reads correctly when reflected in a teleprompter's glass. The
+   dialog and toast aren't inside #prompt-view (the dialog is in the top layer, which
+   ignores ancestor transforms), so they are flipped separately.
    Keep this after the tablet rules: it has to win over their #toast transform. */
 .mirror #prompt-view,
 .mirror #settings,
-.mirror #toast { transform: scaleX(-1); }
-.tablet.mirror #toast { transform: translateX(-50%) scaleX(-1); }
+.mirror #toast { transform: var(--flip); }
+.tablet.mirror #toast { transform: translateX(-50%) var(--flip); }
