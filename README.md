@@ -9,7 +9,7 @@ Live: https://macpham.github.io/web-teleprompter/
 - **Start / Stop**: start or pause listening. Stop keeps your place.
 - **Reset**: go back to the first line.
 - **A− / A+**: font size (remembered).
-- **Mirror** (blue button): flip the prompt screen left-to-right for a beam-splitter teleprompter, where you read the screen reflected in angled glass. It stays on until you turn it off; the button is white while it's on. If the reflection is upside down, turn the device around.
+- **Mirror** (blue button): flip the prompt screen for a beam-splitter teleprompter, where you read the screen reflected in angled glass. Each tap steps to the next mode: left–right, top–bottom, both, then off. A single mirror needs exactly one flip; which one depends on which way round the device sits under the glass, so try left–right and top–bottom and keep the one that reads correctly. The choice is remembered, and the button is white while a mode is on.
 - **Edit**: paste, type or clear the script (saved on the device). The edit screen is never mirrored.
 - **Tap any word** to set your place manually.
 
@@ -29,4 +29,9 @@ The app works in portrait and landscape. When it has tablet-sized room (at least
 
 Plain HTML/CSS/JS with no build step. Serve the folder with any static server, e.g. `python3 -m http.server`, and open `http://localhost:8000`. Microphone access requires `localhost` or HTTPS.
 
-When you change app files, bump `APP_VERSION` in `version.js`. It's shown at the bottom of Settings, and changing it makes installed copies update.
+When you change app files, bump `APP_VERSION` near the top of `index.html`. It's shown at the bottom of Settings, and changing it is what delivers the update.
+
+Refreshing the page while online always loads the current release, as one matching set of files:
+
+- The version is part of the stylesheet and script URLs (`styles.css?v=N`, `app.js?v=N`), so a new release has new URLs that no cache can answer with old files. Browsers re-check the page itself on refresh but reuse the files it links to; GitHub Pages lets them do that for 10 minutes.
+- The service worker (`sw.js`) re-checks every file with the server instead of trusting the browser's cache, so opening the app also gets the current release.
