@@ -3,6 +3,7 @@
   --fg: #fff;
   --past: #6b6b6b;
   --heard: #ff2bd6;
+  --blue: #2d9bff;
   --band: rgba(255, 255, 255, 0.10);
   --btn: #1c1c1e;
   --btn-active: #3a3a3c;
@@ -64,9 +65,28 @@ button {
 button:active { background: var(--btn-active); }
 button.primary { background: var(--heard); color: #000; flex-grow: 1.4; }
 button.primary.stop { background: #fff; }
-.settings-btn { flex: 0 0 44px; display: flex; align-items: center; justify-content: center; }
+.icon-btn { flex: 0 0 44px; display: flex; align-items: center; justify-content: center; }
+/* Blue so it stands apart from the magenta Start button; white while mirroring is on,
+   like Start turning white while running. */
+#mirror-btn { background: var(--blue); color: #000; }
+#mirror-btn:active { background: #7cc0ff; }
+#mirror-btn[aria-pressed="true"] { background: #fff; color: #0b6fd6; }
 .icon { width: 24px; height: 24px; fill: currentColor; }
 #wpm-label { flex: 1 1 0; text-align: center; color: #aaa; font-size: 15px; }
+
+/* The prompt toolbar holds seven controls. On a phone, equal-width buttons would clip
+   "Reset", so its text buttons are sized by their labels and share what room is left. */
+.prompt-bar button:not(.icon-btn) { flex-basis: auto; min-width: 40px; }
+@media (max-width: 374px) {
+  .prompt-bar {
+    gap: 4px;
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+  .prompt-bar button { font-size: 14px; }
+  .prompt-bar button:not(.icon-btn) { min-width: 36px; }
+  .prompt-bar .icon-btn { flex-basis: 40px; }
+}
 
 /* ---------- edit view ---------- */
 
@@ -222,7 +242,7 @@ button.primary.stop { background: #fff; }
 .tablet .toolbar { justify-content: center; gap: 10px; padding-top: 10px; }
 .tablet .toolbar button { flex: 0 1 132px; min-height: 52px; font-size: 17px; }
 .tablet .toolbar button.primary { flex-basis: 200px; }
-.tablet .toolbar .settings-btn { flex: 0 0 56px; }
+.tablet .toolbar .icon-btn { flex: 0 0 56px; }
 .tablet #speed-bar { padding-bottom: 0; }
 .tablet #wpm-label { flex: 0 0 120px; font-size: 17px; }
 
@@ -247,3 +267,14 @@ button.primary.stop { background: #fff; }
   transform: translateX(-50%);
   font-size: 17px;
 }
+
+/* ---------- mirror ---------- */
+/* app.js puts `mirror` on <html> while the prompt screen is showing with mirroring on.
+   The whole screen is flipped left-to-right so it reads correctly when reflected in a
+   teleprompter's glass. The dialog and toast aren't inside #prompt-view (the dialog is in
+   the top layer, which ignores ancestor transforms), so they are flipped separately.
+   Keep this after the tablet rules: it has to win over their #toast transform. */
+.mirror #prompt-view,
+.mirror #settings,
+.mirror #toast { transform: scaleX(-1); }
+.tablet.mirror #toast { transform: translateX(-50%) scaleX(-1); }

@@ -2,7 +2,7 @@
 
 // ---------- constants & persisted settings ----------
 
-const KEY = { text: 'tp.text', fs: 'tp.fs', pos: 'tp.pos', wpm: 'tp.wpm', tune: 'tp.tune' };
+const KEY = { text: 'tp.text', fs: 'tp.fs', pos: 'tp.pos', wpm: 'tp.wpm', tune: 'tp.tune', mirror: 'tp.mirror' };
 const FONT_MIN = 24, FONT_STEP = 4;
 // Default and largest text size per layout: a tablet is read from further away than a phone.
 const FONT = { phone: { def: 40, max: 96 }, tablet: { def: 56, max: 144 } };
@@ -60,6 +60,7 @@ const editView = $('edit-view'), promptView = $('prompt-view');
 const input = $('script-input'), scriptEl = $('script'), scroller = $('scroller');
 const startBtn = $('start-btn'), statusEl = $('status'), toastEl = $('toast');
 const speedBar = $('speed-bar'), wpmLabel = $('wpm-label');
+const mirrorBtn = $('mirror-btn');
 
 // ---------- state ----------
 
@@ -69,6 +70,7 @@ let fontSize = FONT.phone.def;              // size in use, set by applyFontSize
 let wpm = clamp(+load(KEY.wpm, 140) || 140, WPM_MIN, WPM_MAX);
 let pos = +load(KEY.pos, 0) || 0; // index of the next expected token
 let tune = loadTuning();
+let mirrored = load(KEY.mirror, '') === '1';
 
 let words = [];        // { el, line, heard, cls }
 let tokens = [];       // { norm, wi } — normalised matchable units (a word can yield 0..n tokens)
@@ -456,6 +458,22 @@ tabletMQ.addEventListener('change', () => {
   applyFontSize();
 });
 
+// ---------- mirror ----------
+
+// For beam-splitter teleprompters, where the reader sees the screen reflected in angled
+// glass: flip the whole prompt screen left-to-right so the reflection reads normally.
+// The edit screen is left alone; the system keyboard and text selection can't be flipped.
+function applyMirror() {
+  document.documentElement.classList.toggle('mirror', mirrored && !promptView.hidden);
+  mirrorBtn.setAttribute('aria-pressed', mirrored);
+}
+
+function setMirror(on) {
+  mirrored = on;
+  save(KEY.mirror, on ? '1' : '0');
+  applyMirror();
+}
+
 // ---------- tuning settings ----------
 
 function loadTuning() {
@@ -531,12 +549,14 @@ function showEdit() {
   textDirty = false;
   promptView.hidden = true;
   editView.hidden = false;
+  applyMirror();
 }
 
 function showPrompt() {
   if (textDirty) { pos = 0; save(KEY.pos, 0); }
   editView.hidden = true;
   promptView.hidden = false;
+  applyMirror();
   input.blur();
   buildScript();
   updateControls();
@@ -559,6 +579,7 @@ $('font-up-btn').addEventListener('click', () => setFontSize(fontSize + FONT_STE
 $('font-down-btn').addEventListener('click', () => setFontSize(fontSize - FONT_STEP));
 $('slower-btn').addEventListener('click', () => setWpm(wpm - WPM_STEP));
 $('faster-btn').addEventListener('click', () => setWpm(wpm + WPM_STEP));
+mirrorBtn.addEventListener('click', () => setMirror(!mirrored));
 $('edit-btn').addEventListener('click', showEdit);
 $('done-btn').addEventListener('click', showPrompt);
 toastEl.addEventListener('click', () => { toastEl.hidden = true; });

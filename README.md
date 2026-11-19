@@ -9,7 +9,8 @@ Live: https://macpham.github.io/web-teleprompter/
 - **Start / Stop**: start or pause listening. Stop keeps your place.
 - **Reset**: go back to the first line.
 - **A− / A+**: font size (remembered).
-- **Edit**: paste, type or clear the script (saved on the device).
+- **Mirror** (blue button): flip the prompt screen left-to-right for a beam-splitter teleprompter, where you read the screen reflected in angled glass. It stays on until you turn it off; the button is white while it's on. If the reflection is upside down, turn the device around.
+- **Edit**: paste, type or clear the script (saved on the device). The edit screen is never mirrored.
 - **Tap any word** to set your place manually.
 
 If speech recognition isn't available (or is blocked), the app switches to timed auto-scroll with Slower/Faster controls.
